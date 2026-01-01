@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Game Score Tracker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            padding: 10px;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px 10px;
+            background: linear-gradient(135deg, #4a6fa5 0%, #2e8b57 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        /* Player setup screen */
+        .setup-screen {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        }
+        
+        .setup-screen h2 {
+            margin-bottom: 15px;
+            color: #4a6fa5;
+            font-size: 1.4rem;
+        }
+        
+        .input-group {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        .input-group input {
+            flex: 1;
+            padding: 15px;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px 0 0 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus {
+            border-color: #4a6fa5;
+        }
+        
+        .btn {
+            padding: 15px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            display: inline-block;
+            min-height: 52px;
+        }
+        
+        .btn-primary {
+            background-color: #4a6fa5;
+            color: white;
+        }
+        
+        .btn-primary:hover, .btn-primary:active {
+            background-color: #3a5a8c;
+        }
+        
+        .btn-success {
+            background-color: #2e8b57;
+            color: white;
+        }
+        
+        .btn-success:hover, .btn-success:active {
+            background-color: #267049;
+        }
+        
+        .btn-add {
+            background-color: #4a6fa5;
+            color: white;
+            border-radius: 0 8px 8px 0;
+            min-width: 60px;
+            padding: 15px;
+        }
+        
+        .player-list {
+            margin-bottom: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .player-tag {
+            display: inline-flex;
+            align-items: center;
+            background-color: #e9eff7;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+        }
+        
+        .player-tag .remove-player {
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            font-weight: bold;
+            margin-left: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Game screen */
+        .game-screen {
+            display: none;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .controls .btn {
+            flex: 1;
+            min-width: 140px;
+        }
+        
+        .score-table-container {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+        
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 400px;
+        }
+        
+        .score-table th {
+            background: linear-gradient(to bottom, #4a6fa5, #3a5a8c);
+            color: white;
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        
+        .score-table td {
+            padding: 12px 10px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .score-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .score-table tr:hover {
+            background-color: #f0f5ff;
+        }
+        
+        .player-name-cell {
+            font-weight: 600;
+            text-align: left;
+            padding-left: 15px;
+            position: sticky;
+            left: 0;
+            background-color: inherit;
+        }
+        
+        .total-cell {
+            font-weight: 700;
+            background-color: #f0f7ff;
+        }
+        
+        .round-header {
+            min-width: 70px;
+        }
+        
+        .score-input {
+            width: 80%;
+            max-width: 100px;
+            padding: 10px;
+            text-align: center;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .score-input:focus {
+            border-color: #4a6fa5;
+            box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.2);
+        }
+        
+        .results {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        }
+        
+        .results h3 {
+            margin-bottom: 15px;
+            color: #4a6fa5;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+        
+        .ranking-list {
+            list-style-type: none;
+        }
+        
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 15px;
+            margin-bottom: 12px;
+            background-color: #f8fafc;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            transition: transform 0.2s;
+        }
+        
+        .ranking-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .rank-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .rank-1 .rank-badge {
+            background: linear-gradient(135deg, #ffd700, #ffa500);
+            color: #333;
+        }
+        
+        .rank-2 .rank-badge {
+            background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+        }
+        
+        .rank-3 .rank-badge {
+            background: linear-gradient(135deg, #cd7f32, #b56924);
+        }
+        
+        .rank-other .rank-badge {
+            background: linear-gradient(135deg, #4a6fa5, #3a5a8c);
+        }
+        
+        .ranking-item .player-name {
+            flex: 1;
+            margin-left: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .ranking-item .player-total {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: #2e8b57;
+        }
+        
+        .rank-1 {
+            background: linear-gradient(to right, #fff8e1, #fffdf5);
+            border-left: 5px solid #ffc107;
+            box-shadow: 0 3px 6px rgba(255, 193, 7, 0.2);
+        }
+        
+        .rank-2 {
+            background: linear-gradient(to right, #f5f7fa, #ffffff);
+            border-left: 5px solid #c0c0c0;
+            box-shadow: 0 3px 6px rgba(192, 192, 192, 0.2);
+        }
+        
+        .rank-3 {
+            background: linear-gradient(to right, #f9f0ff, #ffffff);
+            border-left: 5px solid #cd7f32;
+            box-shadow: 0 3px 6px rgba(205, 127, 50, 0.2);
+        }
+        
+        .footer-note {
+            text-align: center;
+            margin-top: 20px;
+            color: #777;
+            font-size: 0.85rem;
+        }
+        
+        .round-total {
+            font-weight: 600;
+            color: #4a6fa5;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .btn {
+                padding: 14px 16px;
+                font-size: 0.95rem;
+            }
+            
+            .score-input {
+                width: 90%;
+            }
+            
+            .controls .btn {
+                min-width: 100%;
+            }
+            
+            .ranking-item {
+                padding: 15px 12px;
+                font-size: 1rem;
+            }
+            
+            .rank-badge {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .setup-screen, .score-table-container, .results {
+                padding: 15px;
+            }
+            
+            .score-table th, .score-table td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Game Score Tracker</h1>
+            <p class="subtitle">Higher scores are better! Track and rank your game</p>
+        </div>
+        
+        <!-- Player Setup Screen -->
+        <div class="setup-screen" id="setupScreen">
+            <h2>Add Players</h2>
+            <p style="margin-bottom: 15px; color: #666;">Enter player names below. You need at least 2 players to start.</p>
+            
+            <div class="input-group">
+                <input type="text" id="playerNameInput" placeholder="Enter player name" maxlength="20">
+                <button class="btn btn-add" id="addPlayerBtn">Add</button>
+            </div>
+            
+            <div class="player-list" id="playerList">
+                <!-- Player tags will appear here -->
+            </div>
+            
+            <button class="btn btn-success" id="startGameBtn" style="width: 100%;">Start Game</button>
+        </div>
+        
+        <!-- Game Screen -->
+        <div class="game-screen" id="gameScreen">
+            <div class="controls">
+                <button class="btn btn-primary" id="addRoundBtn">➕ Add Round</button>
+                <button class="btn btn-success" id="rankPlayersBtn">🏆 Rank Players</button>
+                <button class="btn btn-primary" id="addPlayerInGameBtn">👤 Add Player</button>
+            </div>
+            
+            <div class="score-table-container">
+                <table class="score-table" id="scoreTable">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left; padding-left: 15px;">Player</th>
+                            <!-- Round headers will be added here -->
+                        </tr>
+                    </thead>
+                    <tbody id="scoreTableBody">
+                        <!-- Player rows will be added here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="results" id="resultsSection" style="display: none;">
+                <h3>🏆 Final Rankings 🏆</h3>
+                <p style="text-align: center; margin-bottom: 20px; color: #666;">Higher scores are better</p>
+                <ol class="ranking-list" id="rankingList">
+                    <!-- Ranking items will be added here -->
+                </ol>
+                <button class="btn btn-primary" id="backToGameBtn" style="width: 100%; margin-top: 15px;">↩ Back to Game</button>
+            </div>
+        </div>
+        
+        <div class="footer-note">
+            <p>All data is stored locally in your browser. Refresh the page to start a new game.</p>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let players = [];
+        let rounds = 1;
+        let scores = {}; // Format: {playerId: {round1: score, round2: score, ...}}
+        
+        // DOM Elements
+        const setupScreen = document.getElementById('setupScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const playerNameInput = document.getElementById('playerNameInput');
+        const addPlayerBtn = document.getElementById('addPlayerBtn');
+        const playerList = document.getElementById('playerList');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const addRoundBtn = document.getElementById('addRoundBtn');
+        const rankPlayersBtn = document.getElementById('rankPlayersBtn');
+        const addPlayerInGameBtn = document.getElementById('addPlayerInGameBtn');
+        const scoreTable = document.getElementById('scoreTable');
+        const scoreTableBody = document.getElementById('scoreTableBody');
+        const resultsSection = document.getElementById('resultsSection');
+        const rankingList = document.getElementById('rankingList');
+        const backToGameBtn = document.getElementById('backToGameBtn');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load players from localStorage if available
+            const savedPlayers = localStorage.getItem('scoreTrackerPlayers');
+            if (savedPlayers) {
+                players = JSON.parse(savedPlayers);
+                updatePlayerList();
+            }
+            
+            // Event listeners
+            addPlayerBtn.addEventListener('click', addPlayer);
+            playerNameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addPlayer();
+            });
+            
+            startGameBtn.addEventListener('click', startGame);
+            addRoundBtn.addEventListener('click', addRound);
+            rankPlayersBtn.addEventListener('click', showRankings);
+            addPlayerInGameBtn.addEventListener('click', addPlayerInGame);
+            backToGameBtn.addEventListener('click', hideRankings);
+            
+            // Focus on input field
+            playerNameInput.focus();
+        });
+        
+        // Add a new player
+        function addPlayer() {
+            const playerName = playerNameInput.value.trim();
+            
+            if (playerName === '') {
+                alert('Please enter a player name');
+                return;
+            }
+            
+            if (players.includes(playerName)) {
+                alert('Player name already exists');
+                return;
+            }
+            
+            players.push(playerName);
+            updatePlayerList();
+            playerNameInput.value = '';
+            playerNameInput.focus();
+            
+            // Save to localStorage
+            localStorage.setItem('scoreTrackerPlayers', JSON.stringify(players));
+        }
+        
+        // Add player during the game
+        function addPlayerInGame() {
+            const playerName = prompt('Enter new player name:');
+            
+            if (playerName === null || playerName.trim() === '') {
+                return;
+            }
+            
+            if (players.includes(playerName)) {
+                alert('Player name already exists');
+                return;
+            }
+            
+            players.push(playerName);
+            scores[playerName] = {};
+            
+            // Initialize scores for existing rounds
+            for (let i = 1; i <= rounds; i++) {
+                scores[playerName][`round${i}`] = 0;
+            }
+            
+            updateScoreTable();
+        }
+        
+        // Update the player list display
+        function updatePlayerList() {
+            playerList.innerHTML = '';
+            
+            players.forEach((player, index) => {
+                const playerTag = document.createElement('div');
+                playerTag.className = 'player-tag';
+                playerTag.innerHTML = `
+                    ${player}
+                    <button class="remove-player" data-index="${index}">×</button>
+                `;
+                playerList.appendChild(playerTag);
+            });
+            
+            // Add event listeners to remove buttons
+            document.querySelectorAll('.remove-player').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    players.splice(index, 1);
+                    updatePlayerList();
+                    localStorage.setItem('scoreTrackerPlayers', JSON.stringify(players));
+                });
+            });
+            
+            // Enable/disable start game button
+            startGameBtn.disabled = players.length < 2;
+            startGameBtn.style.opacity = players.length < 2 ? 0.5 : 1;
+        }
+        
+        // Start the game
+        function startGame() {
+            if (players.length < 2) {
+                alert('You need at least 2 players to start the game');
+                return;
+            }
+            
+            // Initialize scores object
+            scores = {};
+            players.forEach(player => {
+                scores[player] = {
+                    round1: 0
+                };
+            });
+            
+            // Reset rounds
+            rounds = 1;
+            
+            // Switch to game screen
+            setupScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+            
+            // Update the score table
+            updateScoreTable();
+        }
+        
+        // Update the score table
+        function updateScoreTable() {
+            // Clear the table
+            scoreTableBody.innerHTML = '';
+            
+            // Update round headers
+            const headerRow = scoreTable.querySelector('thead tr');
+            headerRow.innerHTML = '<th style="text-align: left; padding-left: 15px;">Player</th>';
+            
+            // Add round headers and calculate round totals
+            const roundTotals = new Array(rounds).fill(0);
+            
+            for (let i = 1; i <= rounds; i++) {
+                const th = document.createElement('th');
+                th.className = 'round-header';
+                th.textContent = `Round ${i}`;
+                headerRow.appendChild(th);
+                
+                // Calculate round total
+                players.forEach(player => {
+                    const score = parseInt(scores[player][`round${i}`]) || 0;
+                    roundTotals[i-1] += score;
+                });
+            }
+            
+            // Add total column header
+            const totalTh = document.createElement('th');
+            totalTh.textContent = 'Total';
+            headerRow.appendChild(totalTh);
+            
+            // Add round totals row at the top
+            const totalsRow = document.createElement('tr');
+            totalsRow.style.backgroundColor = '#f0f7ff';
+            
+            const totalsLabelCell = document.createElement('td');
+            totalsLabelCell.className = 'player-name-cell';
+            totalsLabelCell.textContent = 'Round Totals:';
+            totalsLabelCell.style.fontWeight = '600';
+            totalsRow.appendChild(totalsLabelCell);
+            
+            for (let i = 0; i < rounds; i++) {
+                const totalCell = document.createElement('td');
+                totalCell.className = 'round-total';
+                totalCell.textContent = roundTotals[i];
+                totalsRow.appendChild(totalCell);
+            }
+            
+            // Empty cell for the grand total column
+            const emptyCell = document.createElement('td');
+            totalsRow.appendChild(emptyCell);
+            
+            scoreTableBody.appendChild(totalsRow);
+            
+            // Add player rows
+            players.forEach(player => {
+                const row = document.createElement('tr');
+                
+                // Player name cell
+                const nameCell = document.createElement('td');
+                nameCell.className = 'player-name-cell';
+                nameCell.textContent = player;
+                row.appendChild(nameCell);
+                
+                // Calculate player total
+                let playerTotal = 0;
+                
+                // Score cells for each round
+                for (let i = 1; i <= rounds; i++) {
+                    const scoreCell = document.createElement('td');
+                    const roundKey = `round${i}`;
+                    
+                    // Initialize score if not exists
+                    if (!scores[player][roundKey]) {
+                        scores[player][roundKey] = 0;
+                    }
+                    
+                    const score = scores[player][roundKey];
+                    playerTotal += parseInt(score) || 0;
+                    
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'score-input';
+                    input.value = score;
+                    input.dataset.player = player;
+                    input.dataset.round = i;
+                    
+                    input.addEventListener('change', function() {
+                        const playerName = this.dataset.player;
+                        const roundNum = parseInt(this.dataset.round);
+                        const newScore = parseInt(this.value) || 0;
+                        
+                        scores[playerName][`round${roundNum}`] = newScore;
+                        updateScoreTable();
+                    });
+                    
+                    input.addEventListener('focus', function() {
+                        this.select();
+                    });
+                    
+                    // Allow negative scores if needed
+                    input.min = "-9999";
+                    input.max = "9999";
+                    
+                    scoreCell.appendChild(input);
+                    row.appendChild(scoreCell);
+                }
+                
+                // Total cell
+                const totalCell = document.createElement('td');
+                totalCell.className = 'total-cell';
+                totalCell.textContent = playerTotal;
+                row.appendChild(totalCell);
+                
+                scoreTableBody.appendChild(row);
+            });
+        }
+        
+        // Add a new round
+        function addRound() {
+            rounds++;
+            
+            // Add the new round to each player's scores
+            players.forEach(player => {
+                scores[player][`round${rounds}`] = 0;
+            });
+            
+            updateScoreTable();
+            
+            // Scroll to the right to see the new round
+            setTimeout(() => {
+                document.querySelector('.score-table-container').scrollLeft = document.querySelector('.score-table-container').scrollWidth;
+            }, 100);
+        }
+        
+        // Show player rankings (HIGHER SCORE IS BETTER)
+        function showRankings() {
+            // Calculate totals for each player
+            const playerTotals = [];
+            
+            players.forEach(player => {
+                let total = 0;
+                
+                for (let i = 1; i <= rounds; i++) {
+                    total += parseInt(scores[player][`round${i}`]) || 0;
+                }
+                
+                playerTotals.push({
+                    name: player,
+                    total: total
+                });
+            });
+            
+            // Sort from HIGH to LOW (higher scores are better)
+            playerTotals.sort((a, b) => b.total - a.total);
+            
+            // Display rankings
+            rankingList.innerHTML = '';
+            
+            playerTotals.forEach((player, index) => {
+                const rankItem = document.createElement('li');
+                const rankClass = index === 0 ? 'rank-1' : 
+                                 index === 1 ? 'rank-2' : 
+                                 index === 2 ? 'rank-3' : 'rank-other';
+                
+                rankItem.className = `ranking-item ${rankClass}`;
+                
+                rankItem.innerHTML = `
+                    <div class="rank-badge">${index + 1}</div>
+                    <span class="player-name">${player.name}</span>
+                    <span class="player-total">${player.total}</span>
+                `;
+                
+                rankingList.appendChild(rankItem);
+            });
+            
+            // Show results section
+            resultsSection.style.display = 'block';
+            
+            // Update button text
+            rankPlayersBtn.textContent = "📊 View Scores";
+            rankPlayersBtn.onclick = hideRankings;
+        }
+        
+        // Hide rankings and return to game
+        function hideRankings() {
+            resultsSection.style.display = 'none';
+            
+            // Reset button text and function
+            rankPlayersBtn.textContent = "🏆 Rank Players";
+            rankPlayersBtn.onclick = showRankings;
+        }
+    </script>
+</body>
+</html>
